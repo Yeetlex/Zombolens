@@ -1,0 +1,3 @@
+_grant() { setcap cap_net_raw=ep /usr/bin/zombolens || echo "==> Run: sudo setcap cap_net_raw=ep /usr/bin/zombolens"; }
+post_install() { _grant; }
+post_upgrade() { _grant; }
