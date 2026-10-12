@@ -53,6 +53,14 @@ actualizarlos en [`src-tauri/src/pz.rs`](src-tauri/src/pz.rs).
 ZomboLens es pasivo y solo enseña lo que el juego ya te deja ver. Aun así,
 cada servidor tiene sus normas: revísalas y úsalo bajo tu responsabilidad.
 
+## Apoyar el proyecto
+
+Si te resulta útil y quieres invitarme a un café, se aceptan donaciones en ETH (red principal de Ethereum):
+
+```text
+0x334B54cE55d40A87919b4066102279D70865b1ae
+```
+
 ## Licencia
 
 GPL-3.0. Project Zomboid es una marca de The Indie Stone; este proyecto no tiene relación con ellos.

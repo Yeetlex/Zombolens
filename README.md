@@ -93,6 +93,14 @@ npm run preview                   # UI with fake data: http://localhost:8767
 ZomboLens is passive and shows only what the game already lets you see.
 Still, every server has its own rules — check them, and use it at your own risk.
 
+## Support
+
+If it helps you and you want to buy me a coffee, donations are welcome in ETH (Ethereum mainnet):
+
+```text
+0x334B54cE55d40A87919b4066102279D70865b1ae
+```
+
 ## License
 
 GPL-3.0-only. Project Zomboid is a trademark of The Indie Stone; this project is not affiliated with them.
