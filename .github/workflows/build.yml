@@ -61,7 +61,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: ZomboLens ${{ github.ref_name }}
-          releaseDraft: true
+          releaseDraft: false
           args: --bundles ${{ matrix.bundles }}
 
       - uses: actions/upload-artifact@v4
