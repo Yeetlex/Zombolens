@@ -75,9 +75,11 @@ header .status { color: var(--muted); font-size: 11px; flex: 1; white-space: now
 .hidden-values .v, .hidden-values .bar { visibility: hidden; }
 
 /* minimized: a dot */
-#dot { display: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
-  background: radial-gradient(circle at 50% 45%, #1a2016 55%, transparent 56%), linear-gradient(135deg, #b8f06a, #e8c25a);
+#dot { display: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; box-sizing: border-box;
+  /* dark disc, gradient ring: two backgrounds, the ring shows through a transparent border */
+  border: 3px solid transparent;
+  background: linear-gradient(#1a2016, #1a2016) padding-box, linear-gradient(135deg, #b8f06a, #e8c25a) border-box;
   align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #c9f08a; }
 body.min #app { display: none; }
 body.min #dot { display: flex; }
-#dot.alert { box-shadow: 0 0 0 3px var(--bad); }
+#dot.alert { background: linear-gradient(#1a2016, #1a2016) padding-box, linear-gradient(135deg, #ff6b6b, #ff9f43) border-box; }
