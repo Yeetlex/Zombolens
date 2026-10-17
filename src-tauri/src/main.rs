@@ -127,10 +127,39 @@ fn start_hyprland_follow(app: AppHandle) {
     };
     std::thread::spawn(move || {
         let mut shown = true;
+        // On Wayland the window never learns where it is (no Moved events) and cannot
+        // place itself, so the position is saved and restored through Hyprland.
+        let pid = std::process::id() as u64;
+        let mut placed = false;
+        let mut settle = 0u8;
         loop {
             std::thread::sleep(Duration::from_millis(500));
             let Some(clients) = hyprctl(&["-j", "clients"]).and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok()) else { continue };
             let list = clients.as_array().cloned().unwrap_or_default();
+            let visible = |c: &&serde_json::Value| c["mapped"].as_bool() == Some(true) && c["hidden"].as_bool() != Some(true);
+            if let Some(me) = list.iter().find(|c| c["pid"].as_u64() == Some(pid)).filter(visible).filter(|_| shown) {
+                let at = (me["at"][0].as_i64().unwrap_or(0) as i32, me["at"][1].as_i64().unwrap_or(0) as i32);
+                let store = app.state::<Arc<Store>>();
+                let saved = { let s = store.settings.lock(); s.x.zip(s.y) };
+                if !placed {
+                    placed = true;
+                    settle = 2; // let the move land before reading the position again
+                    if let Some((x, y)) = saved.filter(|&p| p != at) {
+                        let classic = format!("exact {x} {y},pid:{pid}");
+                        if !hyprctl(&["dispatch", "movewindowpixel", &classic]).is_some_and(|o| o.trim() == "ok") {
+                            let lua = format!("hl.dsp.window.move({{ window = \"pid:{pid}\", x = {x}, y = {y} }})");
+                            let _ = hyprctl(&["dispatch", &lua]);
+                        }
+                    }
+                } else if settle > 0 {
+                    settle -= 1;
+                } else if saved != Some(at) {
+                    let mut s = store.settings.lock();
+                    (s.x, s.y) = (Some(at.0), Some(at.1));
+                    drop(s);
+                    store.save();
+                }
+            }
             let game = list.iter().find(|c| {
                 let class = c["class"].as_str().unwrap_or("").to_lowercase();
                 let title = c["title"].as_str().unwrap_or("").to_lowercase();
@@ -145,6 +174,7 @@ fn start_hyprland_follow(app: AppHandle) {
             if here && !shown {
                 let _ = w.show();
                 shown = true;
+                placed = false;
                 // Move it to the game's workspace if it opened elsewhere.
                 if let Some(me) = list.iter().find(|c| c["title"].as_str() == Some("ZomboLens")) {
                     if me["workspace"]["name"].as_str() != Some(game_ws.as_str()) {
@@ -271,8 +301,14 @@ fn main() {
             if let (Some(x), Some(y)) = (settings.x, settings.y) {
                 let _ = window.set_position(PhysicalPosition::new(x, y));
             }
+            // Under Hyprland the follow thread saves the position: on Wayland, Moved only
+            // ever reports a bogus (0, 0) that would overwrite the real one.
+            let hyprland = std::env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_some();
             window.on_window_event(move |e| {
                 if let WindowEvent::Moved(p) = e {
+                    if hyprland {
+                        return;
+                    }
                     let mut s = store.settings.lock();
                     s.x = Some(p.x);
                     s.y = Some(p.y);
