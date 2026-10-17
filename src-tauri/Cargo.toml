@@ -1,6 +1,6 @@
 [package]
 name = "zombolens"
-version = "0.1.1"
+version = "0.1.2"
 description = "ZomboLens: your Project Zomboid character's status, read from the network"
 license = "GPL-3.0-only"
 edition = "2024"

@@ -1,8 +1,8 @@
 # ZomboLens for Arch and derivatives. Builds from this checkout:
 #   cd packaging/arch && makepkg -si
 pkgname=zombolens
-pkgver=0.1.1
-pkgrel=2
+pkgver=0.1.2
+pkgrel=1
 pkgdesc="Project Zomboid character status overlay, read from the network"
 arch=('x86_64')
 url="https://github.com/Yeetlex/Zombolens"
