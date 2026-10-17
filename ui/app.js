@@ -179,7 +179,7 @@ function fitWindow() {
   const key = `${w}x${h}`;
   if (key !== lastSize && w > 10 && h > 10) {
     lastSize = key;
-    win.setSize(new T.dpi.LogicalSize(w, h));
+    invoke("fit_window", { width: w, height: h });
   }
 }
 

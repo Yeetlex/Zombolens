@@ -56,6 +56,30 @@ struct View {
 }
 
 #[tauri::command]
+fn fit_window(window: tauri::WebviewWindow, width: f64, height: f64) {
+    let _ = window.set_size(tauri::LogicalSize::new(width, height));
+    // Hyprland ignores a floating window resizing itself: ask the compositor too.
+    let (w, h, pid) = (width.round() as i64, height.round() as i64, std::process::id());
+    let run = |arg: String| {
+        std::process::Command::new("hyprctl").args(["dispatch", &arg]).output().ok()
+            .is_some_and(|o| String::from_utf8_lossy(&o.stdout).trim() == "ok")
+    };
+    // Where the user left it: Hyprland resizes from the centre, so put the top-left corner back.
+    let at = std::process::Command::new("hyprctl").args(["-j", "clients"]).output().ok()
+        .and_then(|o| serde_json::from_slice::<serde_json::Value>(&o.stdout).ok())
+        .and_then(|v| v.as_array()?.iter().find(|c| c["pid"].as_u64() == Some(pid as u64))
+            .map(|c| (c["at"][0].as_i64().unwrap_or(0), c["at"][1].as_i64().unwrap_or(0))));
+    if !run(format!("resizewindowpixel exact {w} {h},pid:{pid}")) {
+        let _ = run(format!("hl.dsp.window.resize({{ window = \"pid:{pid}\", x = {w}, y = {h} }})"));
+    }
+    if let Some((x, y)) = at {
+        if !run(format!("movewindowpixel exact {x} {y},pid:{pid}")) {
+            let _ = run(format!("hl.dsp.window.move({{ window = \"pid:{pid}\", x = {x}, y = {y} }})"));
+        }
+    }
+}
+
+#[tauri::command]
 fn get_settings(store: State<Arc<Store>>) -> Settings {
     store.settings.lock().clone()
 }
@@ -212,7 +236,7 @@ fn main() {
                 let _ = w.show();
             }
         }))
-        .invoke_handler(tauri::generate_handler![get_settings, save_settings])
+        .invoke_handler(tauri::generate_handler![get_settings, save_settings, fit_window])
         .setup(move |app| {
             let dir = app.path().app_config_dir().unwrap_or_else(|_| ".".into());
             let _ = std::fs::create_dir_all(&dir);
@@ -236,7 +260,7 @@ fn main() {
                 .shadow(false)
                 .always_on_top(true)
                 .skip_taskbar(true)
-                .resizable(false)
+                .resizable(true)
                 .focused(false)
                 .inner_size(300.0, 420.0)
                 .build()?;
