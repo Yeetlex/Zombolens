@@ -186,10 +186,14 @@ fn start_emitter(app: AppHandle, shared: Arc<Shared>, replay: bool) {
 }
 
 /// On Wayland, a window cannot keep itself above a fullscreen game; through
-/// XWayland it can. Players can override with GDK_BACKEND.
+/// XWayland it can. Players can override with GDK_BACKEND. Hyprland is the
+/// exception: there the overlay is handled natively (it follows the game's
+/// workspace and resizes through hyprctl), and under XWayland it cannot be
+/// dragged without holding the mod key.
 #[cfg(target_os = "linux")]
 fn prefer_xwayland() {
     if std::env::var_os("WAYLAND_DISPLAY").is_some()
+        && std::env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_none()
         && std::env::var_os("DISPLAY").is_some()
         && std::env::var_os("GDK_BACKEND").is_none()
     {
